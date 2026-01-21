@@ -35,7 +35,8 @@ if (!dir.exists(plots_dir)) {
 
 # Set file path for EPA data
 data_file <- here::here("data", "AP_2018_State_County_Inventory.xlsx")
-data_url <- "https://pasteur.epa.gov/uploads/10.23719/1531683/AP_2018_State_County_Inventory.xlsx"
+data_url <- paste0("https://pasteur.epa.gov/uploads/10.23719/1531683/",
+                   "AP_2018_State_County_Inventory.xlsx")
 
 # ============================================================================
 # 2. DATA ACQUISITION: Download EPA data if missing
@@ -43,7 +44,7 @@ data_url <- "https://pasteur.epa.gov/uploads/10.23719/1531683/AP_2018_State_Coun
 
 if (!file.exists(data_file)) {
   cat("Downloading EPA asphalt emissions data...\n")
-  
+
   tryCatch({
     download.file(
       url = data_url,
@@ -51,7 +52,8 @@ if (!file.exists(data_file)) {
       mode = "wb",  # Binary mode for Excel file
       quiet = TRUE
     )
-    cat("✓ Successfully downloaded data to 'data/AP_2018_State_County_Inventory.xlsx'\n")
+    cat(paste("✓ Successfully downloaded data to",
+              "'data/AP_2018_State_County_Inventory.xlsx'\n"))
   }, error = function(e) {
     cat("✗ Error downloading file:\n")
     print(e)
@@ -74,7 +76,7 @@ tryCatch({
     sheet = "Output - State",
     .name_repair = "unique_quiet"
   )
-  
+
   cat("✓ Successfully loaded emissions data\n")
 }, error = function(e) {
   cat("✗ Error reading Excel file:\n")
@@ -97,9 +99,9 @@ state_fips_map <- data.frame(
     "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
     "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
     "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota",
-    "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
-    "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia",
-    "Washington", "West Virginia", "Wisconsin", "Wyoming"
+    "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island",
+    "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
+    "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
   ),
   fips = c(
     1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22,
@@ -125,7 +127,8 @@ emissions_clean <- emissions_data %>%
   filter(!is.na(state_name), !is.na(emissions), !is.na(fips)) %>%
   select(fips, emissions)
 
-cat(sprintf("✓ Extracted emissions data for %d states\n", nrow(emissions_clean)))
+cat(sprintf("✓ Extracted emissions data for %d states\n",
+            nrow(emissions_clean)))
 
 # ============================================================================
 # 5. MAP DATA: Get statistics for color scaling
@@ -173,7 +176,8 @@ choropleth_map <- usmap::plot_usmap(
   # Labels and titles
   labs(
     title = "U.S. Asphalt-Related Emissions by State (2018)",
-    subtitle = "Total kg per capita from the EPA Air Pollutant Emissions Inventory",
+    subtitle = paste("Total kg per capita from the",
+                     "EPA Air Pollutant Emissions Inventory"),
     caption = "Data Source: EPA Air Pollutant Emissions Inventory (2018)"
   ) +
   # Styling
@@ -189,8 +193,10 @@ choropleth_map <- usmap::plot_usmap(
     legend.position = "right",
     # Title and caption styling
     plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
-    plot.subtitle = element_text(size = 11, hjust = 0.5, margin = margin(b = 10)),
-    plot.caption = element_text(size = 9, hjust = 0, margin = margin(t = 10))
+    plot.subtitle = element_text(size = 11, hjust = 0.5,
+                                 margin = margin(b = 10)),
+    plot.caption = element_text(size = 9, hjust = 0,
+                                margin = margin(t = 10))
   )
 
 cat("✓ Map created successfully\n")
@@ -218,19 +224,3 @@ tryCatch({
   print(e)
   stop("Failed to save map as PNG")
 })
-
-# ============================================================================
-# 8. COMPLETION MESSAGE
-# ============================================================================
-
-cat("\n")
-cat("════════════════════════════════════════════════════════════════════════════════\n")
-cat("✓ CHOROPLETH MAP CREATION COMPLETE\n")
-cat("════════════════════════════════════════════════════════════════════════════════\n")
-cat(sprintf("Data Points: %d states\n", nrow(emissions_clean)))
-cat(sprintf("Emissions Range: %.2f - %.2f kg/person\n", emissions_min, emissions_max))
-cat(sprintf("Output File: %s\n", output_file))
-cat("════════════════════════════════════════════════════════════════════════════════\n\n")
-
-# Return invisibly
-invisible(choropleth_map)
