@@ -207,8 +207,8 @@ tryCatch({
   ggsave(
     output_file,
     choropleth_map,
-    width = 14,
-    height = 8,
+    width = 8,
+    height = 5,
     dpi = 300,
     bg = "white"
   )
